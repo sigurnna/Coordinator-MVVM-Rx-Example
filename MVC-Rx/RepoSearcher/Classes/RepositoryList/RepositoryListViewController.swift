@@ -52,17 +52,21 @@ class RepositoryListViewController: UIViewController {
 
         // Fires a request to the github service every time reload or currentLanguage emits an item.
         // Emits an array of repositories -  result of request.
-        let repositories = Observable.combineLatest(reload.startWith().debug(), currentLanguage.debug()) { _, language in return language }
+        let repositories = Observable.combineLatest(reload, currentLanguage) { $1 }
             .debug()
-            .flatMap { [unowned self] in
-                self.githubService.getMostPopularRepositories(byLanguage: $0)
-                    .observeOn(MainScheduler.instance)
-                    .catchError { error in
-                        self.presentAlert(message: error.localizedDescription)
-                        return .empty()
-                    }
+            .flatMap { [weak self] language -> Observable<[Repository]> in
+                guard let weakSelf = self else { return Observable.empty() }
+                
+                return weakSelf.githubService.getMostPopularRepositories(byLanguage: language)
+                        .observeOn(MainScheduler.instance)
+                        .catchError { error in
+                            weakSelf.presentAlert(message: error.localizedDescription)
+                            return Observable.empty()
+                        }
             }
-            .do(onNext: { [weak self] _ in self?.refreshControl.endRefreshing() })
+            .do(onNext: { [weak self] _ in
+                self?.refreshControl.endRefreshing()
+            })
 
         // Bind repositories to the table view as a data source.
         repositories
