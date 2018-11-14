@@ -134,14 +134,16 @@ class RepositoryListViewController: UIViewController {
     private func prepareLanguageListViewController(_ viewController: LanguageListViewController) {
         let dismiss = Observable.merge([
             viewController.didCancel,
-            viewController.didSelectLanguage.map { _ in }
+            viewController.didSelectLanguage.map { _ in } // 이렇게 하면 Void가 return 됨.. 문법 참 싱기방기하네.
             ])
 
         dismiss
+            .debug()
             .subscribe(onNext: { [weak self] in self?.dismiss(animated: true) })
             .disposed(by: viewController.disposeBag)
 
         viewController.didSelectLanguage
+            .debug()
             .bind(to: currentLanguage)
             .disposed(by: viewController.disposeBag)
     }

@@ -64,7 +64,7 @@ class RepositoryListViewModel {
                         return Observable.empty()
                     }
             }
-            .map { repositories in repositories.map(RepositoryViewModel.init) }
+            .map { $0.map(RepositoryViewModel.init) }
 
         let _selectRepository = PublishSubject<RepositoryViewModel>()
         self.selectRepository = _selectRepository.asObserver()
